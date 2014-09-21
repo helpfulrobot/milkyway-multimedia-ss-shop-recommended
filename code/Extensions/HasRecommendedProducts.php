@@ -32,6 +32,8 @@ class HasRecommendedProducts extends \DataExtension
 		'Recommended_Random'   => true,
 	];
 
+	private static $recommended_limit = 4;
+
 	public function updateCMSFields(\FieldList $fields)
 	{
 		$fields->addFieldsToTab('Root.Recommended', [
@@ -85,7 +87,7 @@ class HasRecommendedProducts extends \DataExtension
 						return \TextField::create($col, _t('Product.TITLE', 'Title'), $record->$col)->setAttribute('placeholder', $record->Title);
 					}
 				],
-			]));
+			]), 'GridFieldDeleteAction');
 		}
 	}
 
@@ -95,12 +97,12 @@ class HasRecommendedProducts extends \DataExtension
 		if($this->owner->Recommended_FindBy == 'None')
 			return $list;
 
-		if($this->owner->Recommended_FindBy == 'OtherCategory' && $this->owner->Recommended_Categories()->Relation('Products')->exclude('ID', $this->owner->ID)->exists())
-			$list = $this->owner->Recommended_Categories()->Relation('Products')->exclude('ID', $this->owner->ID);
+		if($this->owner->Recommended_FindBy == 'OtherCategory' && $this->owner->get()->filter('ParentID', $this->owner->Recommended_Categories()->column('ID'))->exclude('ID', $this->owner->ID)->exists())
+			$list = $this->owner->get()->filter('ParentID', $this->owner->Recommended_Categories()->column('ID'))->exclude('ID', $this->owner->ID);
 		elseif($this->owner->Recommended_FindBy == 'OtherProducts' && $this->owner->Recommended_Products()->exclude('ID', $this->owner->ID)->exists())
 			$list = $this->owner->Recommended_Products()->exclude('ID', $this->owner->ID)->sort('SortOrder', 'ASC');
-		elseif(($categories = $this->owner->CategoryIDs) && \ProductCategory::get()->filter('ID', $this->owner->CategoryIDs)->Relation('Products')->exclude('ID', $this->owner->ID)->exists())
-			$list = \ProductCategory::get()->filter('ID', $this->owner->CategoryIDs)->Relation('Products')->exclude('ID', $this->owner->ID);
+		elseif(($categories = $this->owner->CategoryIDs) && $this->owner->get()->filter('ParentID', $categories)->exclude('ID', $this->owner->ID)->exists())
+			$list = $this->owner->get()->filter('ParentID', $categories)->exclude('ID', $this->owner->ID);
 
 		if($list && $list->exists()) {
 			if($this->owner->Recommended_FindBy == 'OtherProducts' && $this->owner->Recommended_Random)
@@ -108,8 +110,8 @@ class HasRecommendedProducts extends \DataExtension
 			else
 				$list = $list->sort('RAND()');
 
-			if($this->owner->Recommended_Limit)
-				$list = $list->limit($this->owner->Recommended_Limit);
+			if($limit = $this->owner->config()->recommended_limit)
+				$list = $list->limit($limit);
 
 			foreach($list as $item) {
 				if($item->AltTitle)
