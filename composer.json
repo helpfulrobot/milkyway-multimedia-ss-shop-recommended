@@ -1,0 +1,32 @@
+{
+	"name"       : "milkyway-multimedia/ss-shop-recommended",
+	"description": "Adds recommended products functionality to Silverstripe Shop",
+	"type"       : "silverstripe-module",
+	"keywords"   : [
+		"silverstripe",
+		"mwm",
+		"shop",
+		"ecommerce",
+		"recommended"
+	],
+	"license"    : "MIT",
+	"authors"    : [
+		{
+			"name" : "Mellisa Hankins",
+			"email": "mell@milkywaymultimedia.com.au"
+		}
+	],
+	"require"    : {
+		"silverstripe/framework": "~3.1",
+		"milkyway-multimedia/ss-gridfield-utils": "dev-master"
+	},
+	"repositories"      : [
+		{
+			"type" : "vcs",
+			"url"  : "https://github.com/milkyway-multimedia/ss-gridfield-utils"
+		}
+	],
+	"extra"      : {
+		"installer-name": "shop-order-history"
+	}
+}

@@ -1,0 +1,6 @@
+---
+Name: shop-recommended--extensions
+---
+Product:
+  extensions:
+    - Milkyway\SS\Shop\Recommended\Extensions\HasRecommendedProducts
