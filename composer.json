@@ -1,22 +1,13 @@
 {
-<<<<<<< HEAD
-	"name"       : "milkyway-multimedia/ss-shop-order-history",
-	"description": "A basic history and communication record for orders",
-=======
 	"name"       : "milkyway-multimedia/ss-shop-recommended",
 	"description": "Adds recommended products functionality to Silverstripe Shop",
->>>>>>> a77606b734aa91eb30b51f38e9883c21b86539b4
 	"type"       : "silverstripe-module",
 	"keywords"   : [
 		"silverstripe",
 		"mwm",
 		"shop",
 		"ecommerce",
-<<<<<<< HEAD
-		"orders"
-=======
 		"recommended"
->>>>>>> a77606b734aa91eb30b51f38e9883c21b86539b4
 	],
 	"license"    : "MIT",
 	"authors"    : [
