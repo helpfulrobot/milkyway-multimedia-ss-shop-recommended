@@ -1,4 +1,5 @@
 ---
+<<<<<<< HEAD
 Name: shop-order-history--extensions
 Before: 'shop/*'
 ---
@@ -9,3 +10,10 @@ Order:
 OrderStatusLog:
   extensions:
     - Milkyway\SS\Shop\OrderHistory\Extensions\OrderStatusLog
+=======
+Name: shop-recommended--extensions
+---
+Product:
+  extensions:
+    - Milkyway\SS\Shop\Recommended\Extensions\HasRecommendedProducts
+>>>>>>> a77606b734aa91eb30b51f38e9883c21b86539b4
