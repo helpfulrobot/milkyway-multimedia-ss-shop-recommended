@@ -105,8 +105,10 @@ class HasRecommendedProducts extends \DataExtension
 			$list = $this->owner->get()->filter('ParentID', $categories)->exclude('ID', $this->owner->ID);
 
 		if($list && $list->exists()) {
-			if($this->owner->Recommended_FindBy == 'OtherProducts' && $this->owner->Recommended_Random)
-				$list = $list->sort('RAND()');
+			if($this->owner->Recommended_FindBy == 'OtherProducts') {
+				if($this->owner->Recommended_Random)
+					$list = $list->sort('RAND()');
+			}
 			else
 				$list = $list->sort('RAND()');
 
