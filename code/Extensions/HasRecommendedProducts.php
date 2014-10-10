@@ -4,7 +4,7 @@
  * Milkyway Multimedia
  * HasRecommendedProducts.php
  *
- * @package reggardocolaianni.com
+ * @package milkyway-multimedia/ss-shop-recommended
  * @author  Mellisa Hankins <mell@milkywaymultimedia.com.au>
  */
 
@@ -66,9 +66,9 @@ class HasRecommendedProducts extends \DataExtension
 					\CompositeField::create(
 						\LiteralField::create('Recommended_FindBy-OtherCategory-Message', '<p class="message field desc selectionGroup-desc">' . _t('Product.Recommended_FindBy-OtherProducts-Message', 'Recommended products will be pulled from the selected products') . '</p>'),
 						\CheckboxField::create('Recommended_Random', _t('Product.Recommended_Random', 'Display products in random order?')),
-						\GridField::create('Recommended_Products', _t('Product.Products', 'Products'), $this->owner->Recommended_Products()->sort('SortOrder', 'ASC'), $gfc = \GridFieldConfig_Base::create(6)
+						\GridField::create('Recommended_Products', _t('Product.Products', 'Products'), $this->owner->Recommended_Products()->sort('SortOrder', 'ASC'), $gfc = \GridFieldConfig_Base::create($this->owner->config()->recommended_limit)
 								->addComponent(new \GridFieldButtonRow('before'), 'GridFieldToolbarHeader')
-								->addComponent(new \GridFieldAddExistingSearchButton('buttons-before-left'), 'GridFieldToolbarHeader')
+								->addComponent(new \GridFieldAddExistingAutocompleter('buttons-before-left', ['Title:PartialMatch', 'InternalItemID', 'Model:PartialMatch']), 'GridFieldToolbarHeader')
 								->addComponent(new \GridFieldDeleteAction(true))
 						)
 					),
@@ -78,8 +78,11 @@ class HasRecommendedProducts extends \DataExtension
 		]);
 
 		if(\ClassInfo::exists('GridFieldExtensions')) {
-			$gfc->addComponent(new \GridFieldOrderableRows('SortOrder'));
 			$gfc->removeComponentsByType('GridFieldDataColumns');
+			$gfc->removeComponentsByType('GridFieldAddExistingAutocompleter');
+
+			$gfc->addComponent(new \GridFieldOrderableRows('SortOrder'));
+			$gfc->addComponent(new \GridFieldAddExistingSearchButton('buttons-before-left'), 'GridFieldToolbarHeader');
 			$gfc->addComponent((new \GridFieldEditableColumns())->setDisplayFields([
 				'AltTitle' => [
 					'title' => _t('Product.TITLE', 'Title'),
@@ -92,10 +95,8 @@ class HasRecommendedProducts extends \DataExtension
 	}
 
 	public function getRecommended() {
-		$list = \ArrayList::create();
-
 		if($this->owner->Recommended_FindBy == 'None')
-			return $list;
+			return \ArrayList::create();
 
 		if($this->owner->Recommended_FindBy == 'OtherCategory' && $this->owner->get()->filter('ParentID', $this->owner->Recommended_Categories()->column('ID'))->exclude('ID', $this->owner->ID)->exists())
 			$list = $this->owner->get()->filter('ParentID', $this->owner->Recommended_Categories()->column('ID'))->exclude('ID', $this->owner->ID);
