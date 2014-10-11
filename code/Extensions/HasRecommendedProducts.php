@@ -51,7 +51,7 @@ class HasRecommendedProducts extends \DataExtension
 					\CompositeField::create(
 						\LiteralField::create('Recommended_FindBy-MainCategory-Message', '<p class="message field desc selectionGroup-desc">' . _t('Product.Recommended_FindBy-MainCategory-Message', 'Recommended products will be pulled from this product\'s main category(ies)') . '</p>')
 					),
-					_t('Product.Recommended_FindBy-MainCategory', 'Main Category')
+					_t('Product.Recommended_FindBy-MainCategory', 'Main Category(ies)')
 				),
 				\SelectionGroup_Item::create(
 					'OtherCategory',
@@ -59,7 +59,7 @@ class HasRecommendedProducts extends \DataExtension
 						\LiteralField::create('Recommended_FindBy-OtherCategory-Message', '<p class="message field desc selectionGroup-desc">' . _t('Product.Recommended_FindBy-OtherCategory-Message', 'Recommended products will be pulled from the selected categories') . '</p>'),
 						\TreeMultiselectField::create('Recommended_Categories', _t('Product.Categories', 'Categories'), 'ProductCategory', 'ID', 'MenuTitle')
 					),
-					_t('Product.Recommended_FindBy-OtherCategory', 'Other Categories')
+					_t('Product.Recommended_FindBy-OtherCategory', 'Selected Category(ies)')
 				),
 				\SelectionGroup_Item::create(
 					'OtherProducts',
@@ -72,7 +72,7 @@ class HasRecommendedProducts extends \DataExtension
 								->addComponent(new \GridFieldDeleteAction(true))
 						)
 					),
-					_t('Product.Recommended_FindBy-OtherProducts', 'Other Products')
+					_t('Product.Recommended_FindBy-OtherProducts', 'Selected Product(s)')
 				),
 			]),
 		]);
