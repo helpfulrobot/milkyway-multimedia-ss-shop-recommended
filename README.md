@@ -8,6 +8,16 @@ Options for setting up recommended products include:
 - Selected Category(ies): Pull products from selected category(ies)
 - Selected Product(s): Select specific products to iterate through the recommended items
 
+Configuration Settings (you set this per Buyable Class)
+
+```
+
+Product:
+  recommended_limit: 4
+  recommended_title: 'Recommended Products'
+
+```
+
 ## Install
 Add the following to your composer.json file
 
