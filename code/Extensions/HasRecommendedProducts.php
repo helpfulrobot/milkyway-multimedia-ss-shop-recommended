@@ -108,8 +108,14 @@ class HasRecommendedProducts extends \DataExtension
 
 		if($this->owner->Recommended_FindBy == 'OtherCategory' && $this->owner->get()->filter('ParentID', $this->owner->Recommended_Categories()->column('ID'))->exclude('ID', $this->owner->ID)->exists())
 			$list = $this->owner->get()->filter('ParentID', $this->owner->Recommended_Categories()->column('ID'))->exclude('ID', $this->owner->ID);
-		elseif($this->owner->Recommended_FindBy == 'OtherProducts' && $this->owner->Recommended_Products()->exclude('ID', $this->owner->ID)->exists())
+		elseif($this->owner->Recommended_FindBy == 'OtherProducts' && $this->owner->Recommended_Products()->exclude('ID', $this->owner->ID)->exists()) {
 			$list = $this->owner->Recommended_Products()->exclude('ID', $this->owner->ID)->sort('SortOrder', 'ASC');
+
+			if($this->owner->Recommended_AlsoBought) {
+				// Too complex to form this into one query at the moment due to versioned...
+				$list = $this->owner->get()->filter('ID', $list->column('ID'));
+			}
+		}
 		elseif(($categories = $this->owner->CategoryIDs) && $this->owner->get()->filter('ParentID', $categories)->exclude('ID', $this->owner->ID)->exists()) {
 			$list = $this->owner->get()->exclude('ID', $this->owner->ID);
 			$any = [
@@ -131,8 +137,10 @@ class HasRecommendedProducts extends \DataExtension
 
 		// This will use the also bought, and set it as the priority items if set via CMS
 		if($this->owner->Recommended_AlsoBought && ($alsoBought = $this->owner->CustomersAlsoBought()) && $alsoBought instanceof \DataList) {
-			$alsoBought = $this->sortListIfNeeded($alsoBought);
-			$list = $this->sortListIfNeeded($list);
+			$baseClass = \ClassInfo::baseDataClass($this->owner);
+
+			$alsoBought = $alsoBought->sort('RAND()');
+			$list = $list->sort('RAND()');
 
 			if($limit) {
 				$alsoBought = $alsoBought->limit($limit);
