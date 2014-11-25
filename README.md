@@ -2,7 +2,7 @@ Silverstripe Shop - Recommended Products
 ======
 **Silverstripe Shop - Recommended Products** adds recommended products functionality to Silverstripe Shop.
 
-Options for setting up recommended products include:
+Default options for setting up recommended products include:
 - None: Do not display any recommended products
 - Main Category(ies): Pull products from this product's main category(ies)
 - Selected Category(ies): Pull products from selected category(ies)

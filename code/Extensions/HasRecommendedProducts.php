@@ -12,7 +12,7 @@ class HasRecommendedProducts extends \DataExtension
 {
 	private static $db = [
 		'Recommended_Title'  => 'Varchar',
-		'Recommended_FindBy' => "Enum('None,MainCategory,OtherCategory,OtherProducts','None')",
+		'Recommended_FindBy' => 'Varchar',
 		'Recommended_Random' => 'Boolean',
 		'Recommended_AlsoBought' => 'Boolean',
 	];
@@ -33,6 +33,15 @@ class HasRecommendedProducts extends \DataExtension
 		'Recommended_Random'   => true,
 	];
 
+	private static $recommended_findBy_methods =  [
+		'Milkyway\SS\Shop\Recommended\Methods\None' => 'None',
+		'Milkyway\SS\Shop\Recommended\Methods\MainCategories' => 'MainCategory',
+		'Milkyway\SS\Shop\Recommended\Methods\OtherCategories' => 'OtherCategory',
+		'Milkyway\SS\Shop\Recommended\Methods\OtherProducts' => 'OtherProducts',
+	];
+
+	private static $recommended_findBy_methods_default = 'Milkyway\SS\Shop\Recommended\Methods\None';
+
 	private static $recommended_limit = 4;
 
 	public function updateCMSFields(\FieldList $fields)
@@ -41,121 +50,45 @@ class HasRecommendedProducts extends \DataExtension
 			\TextField::create('Recommended_Title', _t('Product.Recommended_Title', 'Title'))
 				->setAttribute('placeholder', $this->owner->config()->recommended_title ?: _t('Product.Default-Recommended_Title', 'Recommended Products')),
 			\CheckboxField::create('Recommended_AlsoBought', _t('Product.Recommended_AlsoBought', 'Prioritise products that were bought with this product?'))
-				->setDescription(_t('Product.Desc-Recommended_AlsoBought', 'This will used products that previous customers have bought with this product, otherwise it will select from your choice below.')),
-			\SelectionGroup::create('Recommended_FindBy', [
-				\SelectionGroup_Item::create(
-					'None',
-					\CompositeField::create(
-						\LiteralField::create('Recommended_FindBy-None-Message', '<p class="message field desc selectionGroup-desc">' . _t('Product.Recommended_FindBy-None-Message', 'No recommended products will be displayed for this product') . '</p>')
-					),
-					_t('Product.Recommended_FindBy-None', 'None')
-				),
-				\SelectionGroup_Item::create(
-					'MainCategory',
-					\CompositeField::create(
-						\LiteralField::create('Recommended_FindBy-MainCategory-Message', '<p class="message field desc selectionGroup-desc">' . _t('Product.Recommended_FindBy-MainCategory-Message', 'Recommended products will be pulled from this product\'s main category(ies)') . '</p>')
-					),
-					_t('Product.Recommended_FindBy-MainCategory', 'Main Category(ies)')
-				),
-				\SelectionGroup_Item::create(
-					'OtherCategory',
-					\CompositeField::create(
-						\LiteralField::create('Recommended_FindBy-OtherCategory-Message', '<p class="message field desc selectionGroup-desc">' . _t('Product.Recommended_FindBy-OtherCategory-Message', 'Recommended products will be pulled from the selected categories') . '</p>'),
-						\TreeMultiselectField::create('Recommended_Categories', _t('Product.Categories', 'Categories'), 'ProductCategory', 'ID', 'MenuTitle')
-					),
-					_t('Product.Recommended_FindBy-OtherCategory', 'Selected Category(ies)')
-				),
-				\SelectionGroup_Item::create(
-					'OtherProducts',
-					\CompositeField::create(
-						\LiteralField::create('Recommended_FindBy-OtherCategory-Message', '<p class="message field desc selectionGroup-desc">' . _t('Product.Recommended_FindBy-OtherProducts-Message', 'Recommended products will be pulled from the selected products') . '</p>'),
-						\CheckboxField::create('Recommended_Random', _t('Product.Recommended_Random', 'Display products in random order?')),
-						\GridField::create('Recommended_Products', _t('Product.Products', 'Products'), $this->owner->Recommended_Products()->sort('SortOrder', 'ASC'), $gfc = \GridFieldConfig_Base::create($this->owner->config()->recommended_limit)
-								->addComponent(new \GridFieldButtonRow('before'), 'GridFieldToolbarHeader')
-								->addComponent(new \GridFieldAddExistingAutocompleter('buttons-before-left', ['Title:PartialMatch', 'InternalItemID', 'Model:PartialMatch']), 'GridFieldToolbarHeader')
-								->addComponent(new \GridFieldDeleteAction(true))
-						)
-					),
-					_t('Product.Recommended_FindBy-OtherProducts', 'Selected Product(s)')
-				),
-			]),
+				->setDescription(_t('Product.Desc-Recommended_AlsoBought', 'This will use products that previous customers have bought with this product, otherwise it will select from your choice below.')),
+			\SelectionGroup::create('Recommended_FindBy', $this->getMethodFormFields()),
 		]);
-
-		if(\ClassInfo::exists('GridFieldExtensions')) {
-			$gfc->removeComponentsByType('GridFieldDataColumns');
-			$gfc->removeComponentsByType('GridFieldAddExistingAutocompleter');
-
-			$gfc->addComponent(new \GridFieldOrderableRows('SortOrder'));
-			$gfc->addComponent(new \GridFieldAddExistingSearchButton('buttons-before-left'), 'GridFieldToolbarHeader');
-			$gfc->addComponent((new \GridFieldEditableColumns())->setDisplayFields([
-				'AltTitle' => [
-					'title' => _t('Product.TITLE', 'Title'),
-					'callback' => function($record, $col, $gf) {
-						return \TextField::create($col, _t('Product.TITLE', 'Title'), $record->$col)->setAttribute('placeholder', $record->Title);
-					}
-				],
-			]), 'GridFieldDeleteAction');
-		}
 	}
 
 	public function getRecommended() {
-		if($this->owner->Recommended_FindBy == 'None') {
-			return $this->owner->Recommended_AlsoBought ? $this->owner->CustomersAlsoBought() : \ArrayList::create();
-		}
-
-		$list = null;
+		$method = array_search($this->owner->Recommended_FindBy, $this->owner->config()->recommended_findBy_methods);
 		$limit = $this->owner->config()->recommended_limit;
 
-		if($this->owner->Recommended_FindBy == 'OtherCategory' && $this->owner->get()->filter('ParentID', $this->owner->Recommended_Categories()->column('ID'))->exclude('ID', $this->owner->ID)->exists())
-			$list = $this->owner->get()->filter('ParentID', $this->owner->Recommended_Categories()->column('ID'))->exclude('ID', $this->owner->ID);
-		elseif($this->owner->Recommended_FindBy == 'OtherProducts' && $this->owner->Recommended_Products()->exclude('ID', $this->owner->ID)->exists()) {
-			$list = $this->owner->Recommended_Products()->exclude('ID', $this->owner->ID)->sort('SortOrder', 'ASC');
+		if(!$method)
+			$method = $this->owner->config()->recommended_findBy_methods_default;
 
-			if($this->owner->Recommended_AlsoBought) {
-				// Too complex to form this into one query at the moment due to versioned...
-				$list = $this->owner->get()->filter('ID', $list->column('ID'));
-			}
-		}
-		elseif(($categories = $this->owner->CategoryIDs) && $this->owner->get()->filter('ParentID', $categories)->exclude('ID', $this->owner->ID)->exists()) {
-			$list = $this->owner->get()->exclude('ID', $this->owner->ID);
-			$any = [
-				'ParentID' => $categories,
-			];
-
-			// Go through the Product Categories attached via many many to buyable and add them as well
-			if($component = $this->owner->many_many('ProductCategories')) {
-				list($parentClass, $componentClass, $parentField, $componentField, $relationTable) = $component;
-				$baseClass = \ClassInfo::baseDataClass($this->owner);
-
-				// Join ProductCategories_Products table to find any products that also belong to these categories
-				$list = $list->leftJoin($relationTable, "\"$relationTable\".\"$parentField\" = \"$baseClass\".\"ID\"");
-				$any["$relationTable.$componentField"] = $categories;
-			}
-
-			$list = $list->filterAny($any);
-		}
+		$list = \Injector::inst()->get($method)->getList($this->owner, $limit);
 
 		// This will use the also bought, and set it as the priority items if set via CMS
 		if($this->owner->Recommended_AlsoBought && ($alsoBought = $this->owner->CustomersAlsoBought()) && $alsoBought instanceof \DataList) {
-			$alsoBought = $alsoBought->sort('RAND()');
-			$list = $list->sort('RAND()');
+			if($list instanceof \DataList) {
+				$alsoBought = $alsoBought->sort('RAND()');
+				$list = $list->sort('RAND()');
 
-			if($limit) {
-				$alsoBought = $alsoBought->limit($limit);
-				$list = $list->limit($limit);
+				if($limit) {
+					$alsoBought = $alsoBought->limit($limit);
+					$list = $list->limit($limit);
+				}
+
+				$queries[] = $this->removeOrderByFromQuery($alsoBought)->sql();
+				$queries[] = $this->removeOrderByFromQuery($list)->sql();
+
+				$results = \DB::query(implode(' UNION ', $queries));
+				$records = [];
+
+				foreach($results as $record) {
+					$records[] = \Object::create($list->dataClass(), $record);
+				}
+
+				$list = \ArrayList::create($records);
 			}
-
-			$queries[] = $this->removeOrderByFromQuery($alsoBought)->sql();
-			$queries[] = $this->removeOrderByFromQuery($list)->sql();
-
-			$results = \DB::query(implode(' UNION ', $queries));
-			$records = [];
-
-			foreach($results as $record) {
-				$records[] = \Object::create($list->dataClass(), $record);
-			}
-
-			$list = \ArrayList::create($records);
+			elseif(($list instanceof \Countable) && !$list->count())
+				$list = $alsoBought;
 		}
 
 		if($list && $list->exists()) {
@@ -171,6 +104,8 @@ class HasRecommendedProducts extends \DataExtension
 					$item->Title = $item->AltTitle;
 			}
 		}
+
+		$this->owner->extend('updateRecommended', $list);
 
 		return $list;
 	}
@@ -228,5 +163,38 @@ class HasRecommendedProducts extends \DataExtension
 		$query = $list->dataQuery()->query();
 		$query->setOrderBy([]);
 		return $query;
+	}
+
+	/**
+	 * @return array
+	 */
+	protected function getMethodFormFields()
+	{
+		$default = (string)$this->owner->config()->recommended_findBy_methods_default;
+		$methods = $this->owner->config()->recommended_findBy_methods;
+		$items = [];
+
+		if(isset($methods[$default])) {
+			$items[] =
+				\SelectionGroup_Item::create(
+					$methods[$default],
+					\Injector::inst()->get($default)->getFormFields($this->owner),
+					_t('Product.Recommended_FindBy-' . str_replace(' ', '', $methods[$default]), \Injector::inst()->get($default)->title($this->owner))
+				);
+
+			unset($methods[$default]);
+		}
+
+		foreach($methods as $class => $name) {
+			$method = \Injector::inst()->get($class);
+
+			$items[] = \SelectionGroup_Item::create(
+				$name,
+				$method->getFormFields($this->owner),
+				_t('Product.Recommended_FindBy-' . str_replace(' ', '', $name), $method->title($this->owner))
+			);
+		}
+
+		return $items;
 	}
 } 
