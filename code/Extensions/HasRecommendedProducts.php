@@ -137,8 +137,6 @@ class HasRecommendedProducts extends \DataExtension
 
 		// This will use the also bought, and set it as the priority items if set via CMS
 		if($this->owner->Recommended_AlsoBought && ($alsoBought = $this->owner->CustomersAlsoBought()) && $alsoBought instanceof \DataList) {
-			$baseClass = \ClassInfo::baseDataClass($this->owner);
-
 			$alsoBought = $alsoBought->sort('RAND()');
 			$list = $list->sort('RAND()');
 
@@ -147,8 +145,8 @@ class HasRecommendedProducts extends \DataExtension
 				$list = $list->limit($limit);
 			}
 
-			$queries[] = $this->formatListForUnion($alsoBought)->sql();
-			$queries[] = $this->formatListForUnion($list)->sql();
+			$queries[] = $this->removeOrderByFromQuery($alsoBought)->sql();
+			$queries[] = $this->removeOrderByFromQuery($list)->sql();
 
 			$results = \DB::query(implode(' UNION ', $queries));
 			$records = [];
@@ -162,7 +160,7 @@ class HasRecommendedProducts extends \DataExtension
 
 		if($list && $list->exists()) {
 			if(!$this->owner->Recommended_AlsoBought) {
-				$list = $this->sortListIfNeeded($list);
+				$list = $this->randomiseList($list);
 			}
 
 			if($limit)
@@ -192,6 +190,7 @@ class HasRecommendedProducts extends \DataExtension
 			$buyableRel = $buyableRel . 'ID';
 			$baseClass = \ClassInfo::baseDataClass($this->owner);
 
+			// Had to use EXISTS because IN () not compatible with SS DataModel
 			return $this->owner->get()->where(
 				'EXISTS(' .
 				\DataList::create($orderItemClass)
@@ -215,7 +214,7 @@ class HasRecommendedProducts extends \DataExtension
 		return \ArrayList::create();
 	}
 
-	protected function sortListIfNeeded($list) {
+	protected function randomiseList($list) {
 		if ($this->owner->Recommended_FindBy == 'OtherProducts') {
 			if ($this->owner->Recommended_Random)
 				$list = $list->sort('RAND()');
@@ -225,7 +224,7 @@ class HasRecommendedProducts extends \DataExtension
 		return $list;
 	}
 
-	protected function formatListForUnion($list) {
+	protected function removeOrderByFromQuery($list) {
 		$query = $list->dataQuery()->query();
 		$query->setOrderBy([]);
 		return $query;
