@@ -1,14 +1,11 @@
-<?php
+<?php namespace Milkyway\SS\Shop\Recommended\Methods;
 /**
  * Milkyway Multimedia
  * Contract.php
  *
- * @package reggardocolaianni.com
+ * @package milkyway-multimedia/ss-shop-recommended
  * @author Mellisa Hankins <mell@milkywaymultimedia.com.au>
  */
-
-namespace Milkyway\SS\Shop\Recommended\Methods;
-
 
 interface Contract {
 	public function title($buyable);

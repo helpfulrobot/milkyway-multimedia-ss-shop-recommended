@@ -1,14 +1,12 @@
-<?php
+<?php namespace Milkyway\SS\Shop\Recommended\Methods;
+
 /**
  * Milkyway Multimedia
  * OtherCategories.php
  *
- * @package reggardocolaianni.com
+ * @package milkyway-multimedia/ss-shop-recommended
  * @author Mellisa Hankins <mell@milkywaymultimedia.com.au>
  */
-
-namespace Milkyway\SS\Shop\Recommended\Methods;
-
 
 class OtherCategories implements Contract {
 	public function title($buyable) {
