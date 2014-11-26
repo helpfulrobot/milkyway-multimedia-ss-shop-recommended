@@ -29,6 +29,12 @@ Add the following to your composer.json file
 
 ```
 
+### Requirements
+- [Silverstripe Shop Module](https://github.com/burnbright/silverstripe-shop)
+
+### Suggested Modules
+- [GridField Extensions](https://github.com/ajshort/silverstripe-gridfieldextensions) - Allows sorting and better adding of selected products for recommendation
+
 ## License
 * MIT
 
