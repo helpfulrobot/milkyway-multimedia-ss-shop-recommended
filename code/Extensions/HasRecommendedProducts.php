@@ -46,6 +46,7 @@ class HasRecommendedProducts extends \DataExtension
 
 	public function updateCMSFields(\FieldList $fields)
 	{
+		if(!$this->owner->exists()) return;
 		$fields->addFieldsToTab('Root.Recommended', [
 			\TextField::create('Recommended_Title', _t('Product.Recommended_Title', 'Title'))
 				->setAttribute('placeholder', $this->owner->config()->recommended_title ?: _t('Product.Default-Recommended_Title', 'Recommended Products')),
